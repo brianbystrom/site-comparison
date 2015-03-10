@@ -1,0 +1,12 @@
+.blue {
+
+	color: blue;
+	font-weight: bold;
+}
+
+.box {
+
+	height: 100px;
+	width: 800px;
+	background-color: green;
+}
