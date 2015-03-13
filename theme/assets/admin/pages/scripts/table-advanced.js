@@ -11,16 +11,16 @@ var TableAdvanced = function () {
             var tArray = [];
             var sOut = '';
             var pdate = table.find("#pdate").html();
-            var cdate = table.find("#cdate").html();
-            var name = table.find("#name").html();
+            var csite = table.find("#csite").html();
+            var site = table.find("#site").html();
             var survey = $("#survey_read").find("#surveys").html();
         
             var surveys = survey.split(' ');
 
             var surveys = surveys[2];
 
-            var regExp = /\(([^)]+)\)/;
-            var cid = regExp.exec(name);
+            //var regExp = /\(([^)]+)\)/;
+            //var cid = regExp.exec(name);
 
                $.ajax({
                   async: false,
@@ -28,8 +28,8 @@ var TableAdvanced = function () {
                   type: 'post',
                   data: { item: aData[1].replace(/&amp;/g, '&'),
                             pdate: pdate,
-                            cdate: cdate,
-                            cid: cid[1],
+                            site: name,
+                            csite: csite,
                             surveys: surveys},
                     dataType: 'json',
                   success: function(data, status) { 
@@ -99,7 +99,7 @@ var TableAdvanced = function () {
                 [5, 15, 20, "All"] // change per page values here
             ],
             // set the initial value
-            "pageLength": 10,
+            "pageLength": 20,
         });
         var tableWrapper = $('#sample_3_wrapper'); // datatable creates the table wrapper by adding with id {your_table_jd}_wrapper
 
@@ -132,16 +132,16 @@ var TableAdvanced = function () {
             var tArray = [];
             var sOut = '';
             var pdate = table.find("#pdate").html();
-            var cdate = table.find("#cdate").html();
-            var name = table.find("#name").html();
+            var csite = table.find("#csite").html();
+            var site = table.find("#site").html();
             var survey = $("#survey_read").find("#surveys").html();
         
             var surveys = survey.split(' ');
 
             var surveys = surveys[2];
 
-            var regExp = /\(([^)]+)\)/;
-            var cid = regExp.exec(name);
+            //var regExp = /\(([^)]+)\)/;
+            //var cid = regExp.exec(name);
 
                $.ajax({
                   async: false,
@@ -149,8 +149,8 @@ var TableAdvanced = function () {
                   type: 'post',
                   data: { item: aData[1].replace(/&amp;/g, '&'),
                             pdate: pdate,
-                            cdate: cdate,
-                            cid: cid[1],
+                            site: site,
+                            csite: csite,
                             surveys: surveys},
                     dataType: 'json',
                   success: function(data, status) { 
@@ -217,7 +217,7 @@ var TableAdvanced = function () {
                 [5, 15, 20, "All"] // change per page values here
             ],
             // set the initial value
-            "pageLength": 10,
+            "pageLength": 20,
         });
         var tableWrapper = $('#sample_1_wrapper'); // datatable creates the table wrapper by adding with id {your_table_jd}_wrapper
 

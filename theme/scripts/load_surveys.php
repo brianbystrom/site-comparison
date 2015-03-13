@@ -8,7 +8,7 @@
 
 
 $year = "2015";
-$month = "01";
+$month = "03";
 $days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 
 /*try {
@@ -23,10 +23,10 @@ $days = cal_days_in_month(CAL_GREGORIAN, $month, $year);
     echo 'ERROR: '.$e->getMessage();    
 }*/
 
-$file_handle = fopen("January2015.csv", "r");
+$file_handle = fopen("MoraviaMarch2015.csv", "r");
 $rowData = fgetcsv($file_handle, 1024);
 
-try {
+/*try {
         
     $PDO = $conn->prepare('DELETE FROM survey_data WHERE EXTRACT(MONTH FROM completion_date) = "'.$month.'"');
     $PDO->execute();
@@ -44,7 +44,7 @@ try {
 
 } catch(PDOException $e) {
     echo 'ERROR: '.$e->getMessage();    
-}
+} */
 
 $count = 0;
 
@@ -63,6 +63,8 @@ while (!feof($file_handle) ) {
     
         $completion_date = $rowData[0];
         $completion_date = date("Y-m-d", strtotime($completion_date));
+
+        $site = isset($rowData[8]) ? $rowData[8] : 'None';
     
         $survey_id = isset($rowData[50]) ? $rowData[50] : 0;
         $ctn = isset($rowData[2]) ? $rowData[2] : 0;
@@ -77,6 +79,8 @@ while (!feof($file_handle) ) {
         $pwtr = isset($rowData[22]) ? $rowData[22] : 0;
         $pnrs = isset($rowData[24]) ? $rowData[24] : 0;
         $pfcr = isset($rowData[26]) ? $rowData[26] : 0;
+
+
     
         
         if ($pwtr == 0) { $wtr = 999; }
@@ -93,15 +97,14 @@ while (!feof($file_handle) ) {
         elseif ($pfcr == 1) { $fcr = 100; }
         else { $fcr = 0; }
     
-        echo $completion_date."<br>";
-    
         
        if($level1 != '' && $level1 != '1' && $level1 != '0') {     
            try {
             
-                    $PDO = $conn->prepare('INSERT INTO survey_data (rep_id,completion_date,survey_id,ctn,level_1,level_3,metric_1,metric_2,metric_3,metric_4,verbatim) VALUES (:rep_id,:completion_date,:survey_id,:ctn,:level_1,:level_3,:metric_1,:metric_2,:metric_3,:metric_4,:verbatim)');
+                    $PDO = $conn->prepare('INSERT INTO survey_data (rep_id,completion_date,site,survey_id,ctn,level_1,level_3,metric_1,metric_2,metric_3,metric_4,verbatim) VALUES (:rep_id,:completion_date,:site,:survey_id,:ctn,:level_1,:level_3,:metric_1,:metric_2,:metric_3,:metric_4,:verbatim)');
                     $PDO->bindParam(':survey_id', $survey_id, PDO::PARAM_INT);
                     $PDO->bindParam(':completion_date', $completion_date, PDO::PARAM_STR);
+                    $PDO->bindParam(':site', $site, PDO::PARAM_STR);
                     $PDO->bindParam(':ctn', $ctn, PDO::PARAM_STR);
                     $PDO->bindParam(':level_1', $level1, PDO::PARAM_STR);
                     $PDO->bindParam(':level_3', $level3, PDO::PARAM_STR);

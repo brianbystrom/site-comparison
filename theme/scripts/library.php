@@ -18,6 +18,9 @@ library index
 		get_level_3($conn,$start,$end,$l1)
 		get_name($conn,$cid)
 		get_style($conn,$surveys,$score,$metric,$type)
+		get_sites($conn);
+		get_level_1_totals($conn,$start,$end,$level_1)
+		get_level_3_totals($conn,$start,$end,$level_3)
 
 	Stat Calculations
 
@@ -43,9 +46,9 @@ library index
 // Retrieves surveys by agents for any team.
 //////////////////////////////////////////////
 
-	function get_surveys($conn,$to,$from,$id) {
+	function get_surveys($conn,$to,$from,$site) {
 
-		$team = get_team_base($conn,$id);
+		//$team = get_team_base($conn,$id);
 
 		//print_r($team);
 
@@ -53,7 +56,7 @@ library index
 		$sql = '';
 		$x = 1;
 
-		if(count($team) == 1) {
+		/*if(count($team) == 1) {
 			$sql = "rep_id = '".$team[0]."'";
 		} else {
 
@@ -65,12 +68,12 @@ library index
 				}
 				$x++;
 			}
-		}
+		}*/
 
 		try {
         
-	        $PDO = $conn->prepare('SELECT rep_id,level_1,metric_1,metric_2,metric_3 FROM survey_data WHERE ('.$sql.')');
-	        //$PDO->bindParam(':cid', $id, PDO::PARAM_STR);
+	        $PDO = $conn->prepare('SELECT level_1,metric_1,metric_2,metric_3 FROM survey_data WHERE site = :site');
+	        $PDO->bindParam(':site', $site, PDO::PARAM_STR);
 	        $PDO->execute();
 	        
 	        //$PDO->setFetchMode(PDO::FETCH_OBJ);
@@ -416,6 +419,90 @@ library index
     
 }
 
+//////////////////////////////////////////////
+// Returns distinct sites.
+//////////////////////////////////////////////
+
+	function get_sites($conn) {
+    
+    try {
+        
+        $PDO = $conn->prepare('SELECT DISTINCT site FROM survey_data ORDER BY site ASC');
+        $PDO->execute();
+        
+        //$PDO->setFetchMode(PDO::FETCH_OBJ);
+
+        $array = $PDO->fetchAll();
+
+    } catch(PDOException $e) {
+        echo 'ERROR: '.$e->getMessage();    
+    }
+    
+    return $array;
+}
+
+//////////////////////////////////////////////
+// Returns array of metrics with sum and count.
+//////////////////////////////////////////////
+
+	function get_level_1_totals($conn,$start,$end,$level_1) {
+    
+    try {
+        
+        $PDO = $conn->prepare('SELECT SUM(metric_1) AS m1sum, 
+        								COUNT(metric_1) AS m1count, 
+        								SUM(metric_2) AS m2sum, 
+        								COUNT(metric_2) AS m2count, 
+        								SUM(metric_3) AS m3sum, 
+        								COUNT(metric_3) AS m3count 
+        						FROM survey_data WHERE level_1 = :level_1 AND completion_date BETWEEN :start AND :end');
+        $PDO->bindParam(':level_1', $level_1, PDO::PARAM_STR);
+        $PDO->bindParam(':start', $start, PDO::PARAM_STR);
+        $PDO->bindParam(':end', $end, PDO::PARAM_STR);
+        $PDO->execute();
+        
+        //$PDO->setFetchMode(PDO::FETCH_OBJ);
+
+        $array = $PDO->fetchAll();
+
+    } catch(PDOException $e) {
+        echo 'ERROR: '.$e->getMessage();    
+    }
+    
+    return $array;
+}
+
+//////////////////////////////////////////////
+// Returns array of metrics with sum and count.
+//////////////////////////////////////////////
+
+	function get_level_3_totals($conn,$start,$end,$level_3) {
+    
+    try {
+        
+        $PDO = $conn->prepare('SELECT SUM(metric_1) AS m1sum, 
+        								COUNT(metric_1) AS m1count, 
+        								SUM(metric_2) AS m2sum, 
+        								COUNT(metric_2) AS m2count, 
+        								SUM(metric_3) AS m3sum, 
+        								COUNT(metric_3) AS m3count 
+        						FROM survey_data WHERE level_3 = :level_3 AND completion_date BETWEEN :start AND :end');
+        $PDO->bindParam(':level_3', $level_3, PDO::PARAM_STR);
+        $PDO->bindParam(':start', $start, PDO::PARAM_STR);
+        $PDO->bindParam(':end', $end, PDO::PARAM_STR);
+        $PDO->execute();
+        
+        //$PDO->setFetchMode(PDO::FETCH_OBJ);
+
+        $array = $PDO->fetchAll();
+
+    } catch(PDOException $e) {
+        echo 'ERROR: '.$e->getMessage();    
+    }
+    
+    return $array;
+}
+
 
 //////////////////////////////////////////////
 // Returns WTR score & surveys.
@@ -587,7 +674,7 @@ library index
 // Returns calculated table based on filter
 //////////////////////////////////////////////
 
-	function create_table($conn,$pstart,$pend,$cstart,$cend,$l1,$team,$cid,$view,$scount) {
+	function create_table($conn,$pstart,$pend,$l1,$site,$csite,$view,$scount,$cscount) {
 
 		if($view == '1') { 
 			$header = 'Team Member';
@@ -602,26 +689,26 @@ library index
 
 		$pstart_display = date('m/d/Y', strtotime($pstart));
 		$pend_display = date('m/d/Y', strtotime($pend));
-		$cstart_display = date('m/d/Y', strtotime($cstart));
-		$cend_display = date('m/d/Y', strtotime($cend));
+		//$cstart_display = date('m/d/Y', strtotime($cstart));
+		//$cend_display = date('m/d/Y', strtotime($cend));
 
-		$name = get_name($conn,$cid);
+		//$name = get_name($conn,$cid);
 
 
 		$table .= "<table class='table table-striped table-bordered2 table-hover' id='sample_1'>
 								<thead>
 									<tr>
 										<th class='bg-blue-steel'></th>
-										<th colspan='1' id='name' class='bg-blue-steel text-center'>
-											 ".$name." (".$cid.")
-										</th>
-										<th colspan='5' id='pdate' class='bg-blue-steel text-center'>
+										<th colspan='1' id='pdate' class='bg-blue-steel text-center'>
 											 ".$pstart_display." - ".$pend_display."
 										</th>
-										<th colspan='5' id='cdate' class='bg-blue-steel text-center'>
-											 ".$cstart_display." - ".$cend_display."
+										<th colspan='7' id='site' class='bg-blue-steel text-center'>
+											 ".$site."
 										</th>
-										<th colspan='5' class='bg-blue-steel text-center'>
+										<th colspan='4' id='csite' class='bg-blue-steel text-center'>
+											 ".$csite."
+										</th>
+										<th colspan='4' class='bg-blue-steel text-center'>
 											 Change
 										</th>
 										<th class='bg-blue-ebonyclay text-center'>
@@ -633,9 +720,27 @@ library index
 											".$header."
 										</th>
 										<th class='text-center analyze-border-left'>
-											Surveys
+											% Vol
 										</th>
 										<th class='text-center'>
+											WTR
+										</th>
+										<th class='text-center'>
+											OI
+										</th>
+										<th class='text-center'>
+											NRS
+										</th>
+										<th class='text-center'>
+											OI
+										</th>
+										<th class='text-center'>
+											FCR
+										</th>
+										<th class='text-center'>
+											OI
+										</th>
+										<th class='text-center analyze-border-left'>
 											% Vol
 										</th>
 										<th class='text-center'>
@@ -648,24 +753,6 @@ library index
 											FCR
 										</th>
 										<th class='text-center analyze-border-left'>
-											Surveys
-										</th>
-										<th class='text-center'>
-											% Vol
-										</th>
-										<th class='text-center'>
-											WTR
-										</th>
-										<th class='text-center'>
-											NRS
-										</th>
-										<th class='text-center'>
-											FCR
-										</th>
-										<th class='text-center analyze-border-left'>
-											Surveys
-										</th>
-										<th class='text-center'>
 											% Vol
 										</th>
 										<th class='text-center'>
@@ -689,7 +776,7 @@ library index
 									foreach ($list AS $value) {
 
 										if($view == '0') {
-											$line = create_table_row($conn,$pstart,$pend,$cstart,$cend,$value['level_1'],'level_1',$cid,$team,$scount);
+											$line = create_table_row($conn,$pstart,$pend,$value['level_1'],'level_1',$site,$csite,$scount,$cscount);
 											$item = $value['level_1'];
 										} else { 
 											$line = create_table_row($conn,$pstart,$pend,$cstart,$cend,$value,'team',$cid,$team,$scount);
@@ -709,24 +796,27 @@ library index
 											".$item."
 										</td>
 										<td class='text-center analyze-border-left'>
-											".number_format($line[0], 0, '.', '')."
-										</td>
-										<td class='text-center'>
 											".number_format($line[1], 2, '.', '')."
 										</td>
 										<td class='text-center ".$style2."'>
 											".number_format($line[2], 2, '.', '')."
 										</td>
+										<td class='text-center'>
+											".number_format($line[15], 2, '.', '')."
+										</td>
 										<td class='text-center ".$style3."'>
 											".number_format($line[3], 2, '.', '')."
+										</td>
+										<td class='text-center'>
+											".number_format($line[16], 2, '.', '')."
 										</td>
 										<td class='text-center ".$style4."'>
 											".number_format($line[4], 2, '.', '')."
 										</td>
-										<td class='text-center analyze-border-left'>
-											".number_format($line[5], 0, '.', '')."
-										</td>
 										<td class='text-center'>
+											".number_format($line[17], 2, '.', '')."
+										</td>
+										<td class='text-center analyze-border-left'>
 											".number_format($line[6], 2, '.', '')."
 										</td>
 										<td class='text-center ".$style7."'>
@@ -739,9 +829,6 @@ library index
 											".number_format($line[9], 2, '.', '')."
 										</td>
 										<td class='text-center analyze-border-left'>
-											".number_format($line[10], 0, '.', '')."
-										</td>
-										<td class='text-center'>
 											".number_format($line[11], 2, '.', '')."
 										</td>
 										<td class='text-center'>
@@ -763,6 +850,9 @@ library index
 								}
 
 								$table .= "</tbody>
+									<tfoot>
+
+									</tfoot>
 							</table>";
 
 		return $table;
@@ -774,13 +864,13 @@ library index
 // Returns individual row for the kpi table
 //////////////////////////////////////////////
 
-	function create_table_row($conn,$pstart,$pend,$cstart,$cend,$dname,$driver,$cid,$team,$scount) {
+	function create_table_row($conn,$pstart,$pend,$dname,$driver,$site,$csite,$scount,$cscount) {
 
 		$metrics = get_primary_metrics($conn);
 		$sql = '';
 		$x = 1;
 
-		if($driver == 'team') { $team = get_team_base($conn,$dname); }
+		/*if($driver == 'team') { $team = get_team_base($conn,$dname); }
 
 		if(count($team) == 1) {
 			$sql = "rep_id = '".$team[0]."'";
@@ -794,7 +884,14 @@ library index
 				}
 				$x++;
 			}
-		}
+		}*/
+
+		if($driver == 'level_1') { $oi = get_level_1_totals($conn,$pstart,$pend,$dname); }
+		if($driver == 'level_3') { $oi = get_level_3_totals($conn,$pstart,$pend,$dname); }
+
+		$all_wtr = $oi[0]['m1sum'] / $oi[0]['m1count'];
+		$all_nrs = $oi[0]['m2sum'] / $oi[0]['m2count'];
+		$all_fcr = $oi[0]['m3sum'] / $oi[0]['m3count'];
 
 		if($driver == 'team') {
 
@@ -832,7 +929,8 @@ library index
 
 			try {
 	        
-		        $PDO = $conn->prepare('SELECT metric_1,metric_2,metric_3 FROM survey_data WHERE ('.$sql.') AND '.$driver.' = "'.$dname.'" AND completion_date BETWEEN :start AND :end');
+		        $PDO = $conn->prepare('SELECT metric_1,metric_2,metric_3 FROM survey_data WHERE site = :site AND '.$driver.' = "'.$dname.'" AND completion_date BETWEEN :start AND :end');
+		        $PDO->bindParam(':site', $site, PDO::PARAM_STR);
 		        $PDO->bindParam(':start', $pstart, PDO::PARAM_STR);
 		        $PDO->bindParam(':end', $pend, PDO::PARAM_STR);
 		        $PDO->execute();
@@ -847,9 +945,10 @@ library index
 
 		    try {
         
-	        $PDO2 = $conn->prepare('SELECT metric_1,metric_2,metric_3 FROM survey_data WHERE ('.$sql.') AND '.$driver.' = "'.$dname.'" AND completion_date BETWEEN :start AND :end');
-	        $PDO2->bindParam(':start', $cstart, PDO::PARAM_STR);
-	        $PDO2->bindParam(':end', $cend, PDO::PARAM_STR);
+	        $PDO2 = $conn->prepare('SELECT metric_1,metric_2,metric_3 FROM survey_data WHERE site = :csite AND '.$driver.' = "'.$dname.'" AND completion_date BETWEEN :start AND :end');
+	        $PDO2->bindParam(':csite', $csite, PDO::PARAM_STR);
+	        $PDO2->bindParam(':start', $pstart, PDO::PARAM_STR);
+	        $PDO2->bindParam(':end', $pend, PDO::PARAM_STR);
 	        $PDO2->execute();
 	        
 	        $csurveys = $PDO2->fetchAll();
@@ -867,11 +966,15 @@ library index
 		$psurveys = count($psurveys);
 		$pvol = $psurveys / $scount;
 
+		$wtr_oi = ($all_wtr-$pwtr[1])*$pvol;
+		$nrs_oi = ($all_nrs-$pnrs[1])*$pvol;
+		$fcr_oi = ($all_fcr-$pfcr[1])*$pvol;
+
 	    $cwtr = calc_wtr($csurveys);
 		$cnrs = calc_nrs($csurveys);
 		$cfcr = calc_fcr($csurveys);
 		$csurveys = count($csurveys);
-		$cvol = $csurveys / $scount;
+		$cvol = $csurveys / $cscount;
 
 		$dsurveys = $psurveys - $csurveys;
 		$dwtr = $pwtr[1] - $cwtr[1];
@@ -896,6 +999,9 @@ library index
 		$array[] = $dwtr;
 		$array[] = $dnrs;
 		$array[] = $dfcr;
+		$array[] = $wtr_oi;
+		$array[] = $nrs_oi;
+		$array[] = $fcr_oi;
 		
 
 		return $array;

@@ -6,35 +6,39 @@
 
 	$name = $_SESSION['name'];
 	$cid = $_SESSION['cid'];
-	$site = 'SYKES at Home';
+	//$site = 'SYKES at Home';
 	$page = 'Team Analyzer';
 
 	$explosion = explode(',',$name);
 	$fname = $explosion[1];
 
-	$leader_drop = get_roster_by_rank($conn,'1','7');
+	//$leader_drop = get_roster_by_rank($conn,'1','7');
+	$sites_drop = get_sites($conn);
 
-	$filter_cid = isset($_POST['filter_cid']) ? $_POST['filter_cid'] : $cid;
+	$filter_site = isset($_POST['filter_site']) ? $_POST['filter_site'] : 'Sykes - IRU Work-At-Home';
+	$filter_csite = isset($_POST['filter_csite']) ? $_POST['filter_csite'] : 'Fairborn Call Center';
 	$filter_view = isset($_POST['filter_view']) ? $_POST['filter_view'] : 0;
 	$filter_primary = isset($_POST['filter_primary']) && $_POST['filter_primary'] != '' ? $_POST['filter_primary'] : "12/01/2014 - 12/31/2014";
-	$filter_compare = isset($_POST['filter_compare']) && $_POST['filter_compare'] != '' ? $_POST['filter_compare'] : "12/01/2014 - 12/31/2014";
+	//$filter_compare = isset($_POST['filter_compare']) && $_POST['filter_compare'] != '' ? $_POST['filter_compare'] : "12/01/2014 - 12/31/2014";
 
-	$_SESSION['filter_cid'] = $filter_cid;
+	$_SESSION['filter_site'] = $filter_site;
+	$_SESSION['filter_csite'] = $filter_csite;
 	$_SESSION['filter_view'] = $filter_view;
 	$_SESSION['filter_primary'] = $filter_primary;
-	$_SESSION['filter_compare'] = $filter_compare;
+	//$_SESSION['filter_compare'] = $filter_compare;
 
 	$primary_explode = explode(' - ',$filter_primary);
-	$compare_explode = explode(' - ',$filter_compare);
+	//$compare_explode = explode(' - ',$filter_compare);
 
 	$primary_start = date('Y-m-d', strtotime($primary_explode[0]));
 	$primary_end = date('Y-m-d', strtotime($primary_explode[1]));
-	$compare_start = date('Y-m-d', strtotime($compare_explode[0]));
-	$compare_end = date('Y-m-d', strtotime($compare_explode[1]));
+	//$compare_start = date('Y-m-d', strtotime($compare_explode[0]));
+	//$compare_end = date('Y-m-d', strtotime($compare_explode[1]));
 
-	$filter_team = get_team_base($conn,$filter_cid);
+	//$filter_team = get_team_base($conn,$filter_cid);
 	//$filter_scorecards = get_daily_scorecards($conn,$primary_start,$primary_end,$filter_team);
-	$filter_surveys = get_surveys($conn,$primary_start,$primary_end,$filter_cid);
+	$filter_surveys = get_surveys($conn,$primary_start,$primary_end,$filter_site);
+	$filter_csurveys = get_surveys($conn,$primary_start,$primary_end,$filter_csite);
 	$filter_l1 = get_level_1($conn,$primary_start,$primary_end);
 
 	$kpi_wtr = calc_wtr($filter_surveys);
@@ -42,9 +46,15 @@
 	$kpi_fcr = calc_fcr($filter_surveys);
 	$kpi_surveys = count($filter_surveys);
 
-	$_SESSION['total_surveys'] = $kpi_surveys;
+	$kpi_cwtr = calc_wtr($filter_csurveys);
+	$kpi_cnrs = calc_nrs($filter_csurveys);
+	$kpi_cfcr = calc_fcr($filter_csurveys);
+	$kpi_csurveys = count($filter_csurveys);
 
-	$filter_table = create_table($conn,$primary_start,$primary_end,$compare_start,$compare_end,$filter_l1,$filter_team,$filter_cid,$filter_view,$kpi_surveys);
+	$_SESSION['total_surveys'] = $kpi_surveys;
+	$_SESSION['total_csurveys'] = $kpi_csurveys;
+
+	$filter_table = create_table($conn,$primary_start,$primary_end,$filter_l1,$filter_site,$filter_csite,$filter_view,$kpi_surveys,$kpi_csurveys);
 
 	//$kpi_wtr = calc_scorecard_wtr($filter_scorecards);
 	//$kpi_nrs = calc_scorecard_nrs($filter_scorecards);
@@ -52,7 +62,7 @@
 
 
 
-	$example = get_team_base($conn,$cid);
+	//$example = get_team_base($conn,$cid);
 
 	//echo "<pre>";
 	//print_r($filter_l1);
@@ -82,7 +92,7 @@ License: You must have a valid license purchased only from themeforest(the above
 <!-- BEGIN HEAD -->
 <head>
 <meta charset="utf-8"/>
-<title>QI Tools | Team Analyzer</title>
+<title>QI Tools | Site Comparison</title>
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8">
@@ -173,7 +183,7 @@ License: You must have a valid license purchased only from themeforest(the above
 					<i class="fa fa-circle"></i>
 				</li>
 				<li class="active">
-					 Team Analyzer
+					 Site Comparison
 				</li>
 			</ul>
 			<!-- END PAGE BREADCRUMB -->
@@ -209,7 +219,7 @@ License: You must have a valid license purchased only from themeforest(the above
 						<div class="portlet-body">
 							
 								<div class="row">
-									<form method="POST" name="filter" action="index.php" id="form_sample_2" onsubmit="return validateForm();" novalidate="novalidate">
+									<form method="POST" name="filter" id="form_sample_2" onsubmit="return validateForm();" novalidate="novalidate">
 									<div class="col-md-3">
 										<div class="form-group">
 											<label class="control-label">Primary Date Range</label><br>
@@ -226,25 +236,29 @@ License: You must have a valid license purchased only from themeforest(the above
 									<!--/span-->
 									<div class="col-md-3">
 										<div class="form-group">
-											<label class="control-label">Compare Date Range</label><br>
-											<div class="input-group" id="compareDateRange">
-												<input type="text" id="reportrangecompare" name="filter_compare" class="form-control">
-												<span class="input-group-btn">
-												<button class="btn default date-range-toggle" type="button"><i class="fa fa-calendar"></i></button>
-												</span>
-											</div>
+											<label class="control-label">Primary Site</label>
+											<select class="form-control select2me" data-placeholder="Select..." name="filter_site">
+												<option value=''>Select site</option>
+											<?
+												foreach($sites_drop AS $site) {
+													echo '<option value="'.$site[site].'">'.$site[site].'</option>';
+												}
+
+											?>
+
+											</select>
 											<span class="help-block">
-											</span>
+											 </span>
 										</div>
 									</div>
 									<div class="col-md-3">
 										<div class="form-group">
-											<label class="control-label">Leader Name</label>
-											<select class="form-control select2me" data-placeholder="Select..." name="filter_cid">
-												<option value=''>Select leader</option>
+											<label class="control-label">Compare Site</label>
+											<select class="form-control select2me" data-placeholder="Select..." name="filter_csite">
+												<option value=''>Select site</option>
 											<?
-												foreach($leader_drop AS $leader) {
-													echo '<option value="'.$leader[cid].'">'.$leader[name].'</option>';
+												foreach($sites_drop AS $site) {
+													echo '<option value="'.$site[site].'">'.$site[site].'</option>';
 												}
 
 											?>
@@ -257,7 +271,7 @@ License: You must have a valid license purchased only from themeforest(the above
 									<div class="col-md-3">
 										<div class="form-group">
 											<label class="control-label">Output View</label>
-											<select class="form-control select2me" data-placeholder="Select..." name="filter_view">
+											<select class="form-control select2me" data-placeholder="Select..." disabled name="filter_view">
 												<option value="">Select view</option>
 												<option value="0">Drivers</option>
 												<option value="1">Team</option>
@@ -356,7 +370,7 @@ License: You must have a valid license purchased only from themeforest(the above
 						<div class="portlet-title">
 							<div class="caption">
 								<i class="fa fa-table font-blue-steel"></i>
-								<span class="caption-subject font-blue-steel bold uppercase">Team Analyzer Table</span>
+								<span class="caption-subject font-blue-steel bold uppercase">Site Comparison Table</span>
 							</div>
 							<div class="tools">
 								<a href="javascript:;" class="fullscreen">
@@ -375,777 +389,8 @@ License: You must have a valid license purchased only from themeforest(the above
 					</div>
 					</div>
 				</div>
-				<div class="row">
-				<div class="col-lg-12">
-					<div class="portlet light">
-						<div class="portlet-title">
-							<div class="caption">
-								<i class="fa fa-eye font-blue-steel"></i>
-								<span class="caption-subject font-blue-steel bold uppercase">Recommended Driver Focus</span>
-							</div>
-							<div class="tools">
-								<a href="javascript:;" class="fullscreen">
-								</a>
-							</div>
-						</div>
-						
-						
-						<div class="portlet-body">
-						<div class="caption">
-								<i class="fa fa-star-o font-blue-steel"></i>
-								<span class="caption-subject font-blue-steel bold uppercase">Billing</span>
-							</div>
-							<div class="row">
-								<div class="col-md-4">
-								<div class="table-scrollable">
-									<table class="table table-striped table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>BOT 5 YOUR TEAM</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center">
-										<b>Team Member</b>
-										</th>
-										<th class="text-center">
-										<b>Manager</b>
-										</th>
-										<th class="text-center">
-										<b>WTR</b>
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Woods, Natashia
-										</td>
-										<td class="text-center">
-										Garah, Jose
-										</td>
-										<td class="text-center">
-										100.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Pimble, Teresa
-										</td>
-										<td class="text-center">
-										Smith, Ann
-										</td>
-										<td class="text-center">
-										75.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Buchinski, Eric
-										</td>
-										<td class="text-center">
-										Anderson, Keith
-										</td>
-										<td class="text-center">
-										60.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Farris, Troy
-										</td>
-										<td class="text-center">
-										Garay, Jose
-										</td>
-										<td class="text-center">
-										50.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Pursel Deborah
-										</td>
-										<td class="text-center">
-										Garay, Jose
-										</td>
-										<td class="text-center">
-										33.3
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-							<div class="col-md-4">
-								<div class="table-scrollable">
-									<table class="table table-striped table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>TOP 5 YOUR TEAM</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center ">
-										Team Member
-										</th>
-										<th class="text-center ">
-										Surveys
-										</th>
-										<th class="text-center ">
-										WTR
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Donelson, Ann
-										</td>
-										<td class="text-center">
-										10
-										</td>
-										<td class="text-center">
-										60.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Smith, Ann
-										</td>
-										<td class="text-center">
-										10
-										</td>
-										<td class="text-center">
-										50.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Shock, Beth
-										</td>
-										<td class="text-center">
-										12
-										</td>
-										<td class="text-center">
-										50.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Anderson, Keith
-										</td>
-										<td class="text-center">
-										28
-										</td>
-										<td class="text-center">
-										33.3
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Gibson, Jacqueline
-										</td>
-										<td class="text-center">
-										16
-										</td>
-										<td class="text-center">
-										20.0
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-							<div class="col-md-4">
-								<div class="table-scrollable">
-									<table class="table table-striped table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>BOT 5 YOUR TEAM</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center">
-										<b>Team Member</b>
-										</th>
-										<th class="text-center">
-										<b>Surveys</b>
-										</th>
-										<th class="text-center">
-										<b>WTR</b>
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Guariglia, Anthony
-										</td>
-										<td class="text-center">
-										Garah, Jose
-										</td>
-										<td class="text-center">
-										-18.18
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Martinez, Melissa
-										</td>
-										<td class="text-center">
-										Smith, Ann
-										</td>
-										<td class="text-center">
-										0.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Lazenby, Clay
-										</td>
-										<td class="text-center">
-										Anderson, Keith
-										</td>
-										<td class="text-center">
-										0.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Garrison, Aletha
-										</td>
-										<td class="text-center">
-										Garay, Jose
-										</td>
-										<td class="text-center">
-										0.0
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Garay, Jose
-										</td>
-										<td class="text-center">
-										11
-										</td>
-										<td class="text-center">
-										18.2
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-
-						</div>
-						<div class="caption">
-								<i class="fa fa-star-o font-blue-steel"></i>
-								<span class="caption-subject font-blue-steel bold uppercase">Driver #2</span>
-							</div>
-						<div class="row">
-
-								<div class="col-md-4">
-								<div class="table-scrollable">
-									<table class="table table-striped table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>TOP 5 OVERALL</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center ">
-										Person
-										</th>
-										<th class="text-center ">
-										Surveys
-										</th>
-										<th class="text-center ">
-										WTR
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Person 1
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 2
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 3
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 4
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 5
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-							<div class="col-md-4">
-							
-								<div class="table-scrollable">
-									<table class="table table-striped table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>TOP 5 OVERALL</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center">
-										<b>Person</b>
-										</th>
-										<th class="text-center">
-										<b>Surveys</b>
-										</th>
-										<th class="text-center">
-										<b>WTR</b>
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Person 1
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 2
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 3
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 4
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 5
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-							<div class="col-md-4">
-								<div class="table-scrollable">
-									<table class="table table-striped table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>TOP 5 OVERALL</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center">
-										<b>Person</b>
-										</th>
-										<th class="text-center">
-										<b>Surveys</b>
-										</th>
-										<th class="text-center">
-										<b>WTR</b>
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Person 1
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 2
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 3
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 4
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 5
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-							
-						</div>
-						<div class="caption">
-							<i class="fa fa-star-o font-blue-steel"></i>
-							<span class="caption-subject font-blue-steel bold uppercase">Driver #3</span>
-						</div>
-						<div class="row">
-						
-								<div class="col-md-4">
-								<div class="table-scrollable">
-									<table class="table table-striped table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>TOP 5 OVERALL</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center">
-										<b>Person</b>
-										</th>
-										<th class="text-center">
-										<b>Surveys</b>
-										</th>
-										<th class="text-center">
-										<b>WTR</b>
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Person 1
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 2
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 3
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 4
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 5
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-							<div class="col-md-4">
-								<div class="table-scrollable">
-									<table class="table table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>TOP 5 OVERALL</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center bg-grey-steel">
-										Person
-										</th>
-										<th class="text-center bg-grey-steel">
-										Surveys
-										</th>
-										<th class="text-center bg-grey-steel">
-										WTR
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Person 1
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 2
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 3
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 4
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 5
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-							<div class="col-md-4">
-								<div class="table-scrollable">
-									<table class="table table-striped table-bordered2 table-hover">
-									<thead>
-									<tr>
-										<th colspan="3" class="text-center bg-blue-steel">
-											 <b>TOP 5 OVERALL</b>
-										</th>
-									</tr>
-									<tr>
-										<th class="text-center">
-										<b>Person</b>
-										</th>
-										<th class="text-center">
-										<b>Surveys</b>
-										</th>
-										<th class="text-center">
-										<b>WTR</b>
-										</th>
-									</tr>
-									</thead>
-									<tbody>
-									<tr>
-										<td class="text-center">
-										Person 1
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 2
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 3
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 4
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									<tr>
-										<td class="text-center">
-										Person 5
-										</td>
-										<td class="text-center">
-										123
-										</td>
-										<td class="text-center">
-										44.6
-										</td>
-									</tr>
-									</tbody>
-									</table>
-								</div>	
-							</div>
-							</div>
-						</div>
-						</div>
-					</div>
+				
+					
 					<!-- END EXAMPLE TABLE PORTLET-->
 			</div>
 			<!-- /.modal -->
@@ -1236,23 +481,24 @@ jQuery(document).ready(function() {
 
 	function validateForm() {
 	    var primary = document.forms["filter"]["filter_primary"].value;
-	    var compare = document.forms["filter"]["filter_compare"].value;
-	    var cid = document.forms["filter"]["filter_cid"].value;
-	    var view = document.forms["filter"]["filter_view"].value;
+	    //var compare = document.forms["filter"]["filter_compare"].value;
+	    var site = document.forms["filter"]["filter_site"].value;
+	    var csite = document.forms["filter"]["filter_csite"].value;
+	    //var view = document.forms["filter"]["filter_view"].value;
 	    var error = '';
 
 	    if (primary == null || primary == "") {
 	      	error += "Please enter a primary date range.<br>";  
 	    }
-	    if (compare == null || compare == "") {
-	      	error += "Please enter a compare date range.<br>";  
+	    if (site == null || site == "") {
+	      	error += "Please select a site.<br>";  
 	    }
-	    if (cid == null || cid == "") {
-	      	error += "Please select a leader.<br>";  
+	    if (csite == null || csite == "") {
+	      	error += "Please enter a compare site.<br>";  
 	    }
-	    if (view == null || view == "") {
-	      	error += "Please select a view.<br>";  
-	    }
+	   // if (view == null || view == "") {
+	     // 	error += "Please select a view.<br>";  
+	    //}
 
 	    if(error != '') {
 	    	$('#error_message').html(error);
