@@ -21,6 +21,7 @@ library index
 		get_sites($conn);
 		get_level_1_totals($conn,$start,$end,$level_1)
 		get_level_3_totals($conn,$start,$end,$level_3)
+		get_site_rollup($conn,$start,$end,$site)
 
 	Stat Calculations
 
@@ -503,6 +504,38 @@ library index
     return $array;
 }
 
+//////////////////////////////////////////////
+// Returns array of a sites rollup for a given period of time.
+//////////////////////////////////////////////
+
+	function get_site_rollup($conn,$start,$end,$site) {
+    
+    try {
+        
+        $PDO = $conn->prepare('SELECT SUM(metric_1) AS m1sum, 
+        								COUNT(metric_1) AS m1count, 
+        								SUM(metric_2) AS m2sum, 
+        								COUNT(metric_2) AS m2count, 
+        								SUM(metric_3) AS m3sum, 
+        								COUNT(metric_3) AS m3count 
+        						FROM survey_data WHERE site = :site AND completion_date BETWEEN :start AND :end');
+        $PDO->bindParam(':site', $site, PDO::PARAM_STR);
+        $PDO->bindParam(':start', $start, PDO::PARAM_STR);
+        $PDO->bindParam(':end', $end, PDO::PARAM_STR);
+        $PDO->execute();
+        
+        //$PDO->setFetchMode(PDO::FETCH_OBJ);
+
+        $array = $PDO->fetchAll();
+
+    } catch(PDOException $e) {
+        echo 'ERROR: '.$e->getMessage();    
+    }
+    
+    return $array;
+}
+
+
 
 //////////////////////////////////////////////
 // Returns WTR score & surveys.
@@ -684,7 +717,10 @@ library index
 			$list = $l1;
 		}
 
+		$site_rollup = get_site_rollup($conn,$pstart,$pend,$site);
+		$csite_rollup = get_site_rollup($conn,$pstart,$pend,$site);
 
+		
 		$table = '';
 
 		$pstart_display = date('m/d/Y', strtotime($pstart));

@@ -4,6 +4,13 @@
 	include('./include/include.inc');
 	include('../../scripts/library.php');
 
+	if(isset($_SESSION['auth'])) {
+      check_login($conn);
+    } else {
+    	header('Location: logout.php');
+    	exit;
+    }
+
 	$name = $_SESSION['name'];
 	$cid = $_SESSION['cid'];
 	//$site = 'SYKES at Home';

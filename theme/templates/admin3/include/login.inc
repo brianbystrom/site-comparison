@@ -34,10 +34,13 @@ function login_user($conn,$user,$password) {
 		$auth_code = md5(time());
 		$time = time() + (60*60);
 		$ip = $_SERVER['REMOTE_ADDR'];
+
 		$_SESSION['auth'] = $auth_code;
 		$_SESSION['status'] = 'active';
+		$id = $login[0]['id'];
 		$cid = $login[0]['cid'];
 		$_SESSION['cid'] = $cid;
+		$_SESSION['id'] = $id;
 		$_SESSION['name'] = $login[0]['name'];
 		
 		header('Location: index.php');
@@ -72,12 +75,12 @@ function login_user($conn,$user,$password) {
 	
 }
 
-function check_login() {
-	// Function to evaluate login status
+function check_login($conn) {
+
 	$id = $_SESSION['id'];
-	$auth_code = $_SESSION['auth'];
-	$status = $_SESSION['status'];
-	if (check_credentials($id, $auth_code, $status) != 'TRUE') {
+	$auth = $_SESSION['auth'];
+	
+	if (check_credentials($conn, $id, $auth) != true) {
 		header('Location: logout.php');
 		exit;
 	}
