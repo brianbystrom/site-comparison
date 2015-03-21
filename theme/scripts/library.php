@@ -497,6 +497,9 @@ library index
 
         $array = $PDO->fetchAll();
 
+        print_r($array);
+        die();
+
     } catch(PDOException $e) {
         echo 'ERROR: '.$e->getMessage();    
     }
@@ -509,7 +512,9 @@ library index
 //////////////////////////////////////////////
 
 	function get_site_rollup($conn,$start,$end,$site) {
-    
+
+	//die($start." ".$end." ".$site);
+
     try {
         
         $PDO = $conn->prepare('SELECT SUM(metric_1) AS m1sum, 
@@ -707,7 +712,7 @@ library index
 // Returns calculated table based on filter
 //////////////////////////////////////////////
 
-	function create_table($conn,$pstart,$pend,$l1,$site,$csite,$view,$scount,$cscount) {
+	function create_table($conn,$pstart,$pend,$l1,$site,$csite,$view,$scount,$cscount,$totals) {
 
 		if($view == '1') { 
 			$header = 'Team Member';
@@ -717,10 +722,7 @@ library index
 			$list = $l1;
 		}
 
-		$site_rollup = get_site_rollup($conn,$pstart,$pend,$site);
-		$csite_rollup = get_site_rollup($conn,$pstart,$pend,$site);
 
-		
 		$table = '';
 
 		$pstart_display = date('m/d/Y', strtotime($pstart));
@@ -837,9 +839,7 @@ library index
 										<td class='text-center ".$style2."'>
 											".number_format($line[2], 2, '.', '')."
 										</td>
-										<td class='text-center'>
-											".number_format($line[15], 2, '.', '')."
-										</td>
+										<td class='text-center'>".number_format($line[15], 2, '.', '')."</td>
 										<td class='text-center ".$style3."'>
 											".number_format($line[3], 2, '.', '')."
 										</td>
@@ -887,7 +887,60 @@ library index
 
 								$table .= "</tbody>
 									<tfoot>
-
+										<tr class='bg-grey'>
+											<td></td>
+											<td>
+												Total
+											</td>
+											<td class='text-center analyze-border-left'>
+												-
+											</td>
+											<td class='text-center'>
+												".number_format($totals[1], 2, '.', '')."
+											</td>
+											<td class='text-center'>
+												-
+											</td>
+											<td class='text-center'>
+												".number_format($totals[2], 2, '.', '')."
+											</td>
+											<td class='text-center'>
+												-
+											</td>
+											<td class='text-center'>
+												".number_format($totals[3], 2, '.', '')."
+											</td>
+											<td class='text-center'>
+												-
+											</td>
+											<td class='text-center analyze-border-left'>
+												-
+											</td>
+											<td class='text-center'>
+												".number_format($totals[5], 2, '.', '')."
+											</td>
+											<td class='text-center'>
+												".number_format($totals[6], 2, '.', '')."
+											</td>
+											<td class='text-center'>
+												".number_format($totals[7], 2, '.', '')."
+											</td>
+											<td class='text-center analyze-border-left'>
+												-
+											</td>
+											<td class='text-center'>
+												".number_format($totals[1]-$totals[5], 2, '.', '')."
+											</td>
+											<td class='text-center'>
+												".number_format($totals[2]-$totals[6], 2, '.', '')."
+											</td>
+											<td class='text-center'>
+												".number_format($totals[3]-$totals[7], 2, '.', '')."
+											</td>
+											<td class='text-center analyze-border-left'>
+												
+											</td>
+										</tr>
 									</tfoot>
 							</table>";
 

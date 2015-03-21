@@ -25,7 +25,7 @@
 	$filter_site = isset($_POST['filter_site']) ? $_POST['filter_site'] : 'Sykes - IRU Work-At-Home';
 	$filter_csite = isset($_POST['filter_csite']) ? $_POST['filter_csite'] : 'Fairborn Call Center';
 	$filter_view = isset($_POST['filter_view']) ? $_POST['filter_view'] : 0;
-	$filter_primary = isset($_POST['filter_primary']) && $_POST['filter_primary'] != '' ? $_POST['filter_primary'] : "12/01/2014 - 12/31/2014";
+	$filter_primary = isset($_POST['filter_primary']) && $_POST['filter_primary'] != '' ? $_POST['filter_primary'] : "03/01/2015 - 03/31/2015";
 	//$filter_compare = isset($_POST['filter_compare']) && $_POST['filter_compare'] != '' ? $_POST['filter_compare'] : "12/01/2014 - 12/31/2014";
 
 	$_SESSION['filter_site'] = $filter_site;
@@ -48,6 +48,10 @@
 	$filter_csurveys = get_surveys($conn,$primary_start,$primary_end,$filter_csite);
 	$filter_l1 = get_level_1($conn,$primary_start,$primary_end);
 
+	//$totals = array();
+
+	
+
 	$kpi_wtr = calc_wtr($filter_surveys);
 	$kpi_nrs = calc_nrs($filter_surveys);
 	$kpi_fcr = calc_fcr($filter_surveys);
@@ -58,10 +62,20 @@
 	$kpi_cfcr = calc_fcr($filter_csurveys);
 	$kpi_csurveys = count($filter_csurveys);
 
+	$totals[] = count($filter_surveys);
+	$totals[] = $kpi_wtr[1];
+	$totals[] = $kpi_nrs[1];
+	$totals[] = $kpi_fcr[1];
+	
+	$totals[] = count($filter_csurveys);
+	$totals[] = $kpi_cwtr[1];
+	$totals[] = $kpi_cnrs[1];
+	$totals[] = $kpi_cfcr[1];
+
 	$_SESSION['total_surveys'] = $kpi_surveys;
 	$_SESSION['total_csurveys'] = $kpi_csurveys;
 
-	$filter_table = create_table($conn,$primary_start,$primary_end,$filter_l1,$filter_site,$filter_csite,$filter_view,$kpi_surveys,$kpi_csurveys);
+	$filter_table = create_table($conn,$primary_start,$primary_end,$filter_l1,$filter_site,$filter_csite,$filter_view,$kpi_surveys,$kpi_csurveys,$totals);
 
 	//$kpi_wtr = calc_scorecard_wtr($filter_scorecards);
 	//$kpi_nrs = calc_scorecard_nrs($filter_scorecards);
@@ -484,6 +498,15 @@ jQuery(document).ready(function() {
 
    
    
+});
+
+$(document).ready(function(){    
+    $("#sample_1 tbody tr td:nth-child(5)").each(function(){
+    	var percent = $(this).html();
+    	percent = Number(percent)/2;
+        var textval = "<div class='oi-bg' style='width: "+percent+"%'>"+$(this).html()+"</div>";        
+        $(this).html(textval);
+    });
 });
 
 	function validateForm() {
