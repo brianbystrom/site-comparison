@@ -450,12 +450,7 @@ library index
     
     try {
         
-        $PDO = $conn->prepare('SELECT SUM(metric_1) AS m1sum, 
-        								COUNT(metric_1) AS m1count, 
-        								SUM(metric_2) AS m2sum, 
-        								COUNT(metric_2) AS m2count, 
-        								SUM(metric_3) AS m3sum, 
-        								COUNT(metric_3) AS m3count 
+        $PDO = $conn->prepare('SELECT metric_1, metric_2, metric_3
         						FROM survey_data WHERE level_1 = :level_1 AND completion_date BETWEEN :start AND :end');
         $PDO->bindParam(':level_1', $level_1, PDO::PARAM_STR);
         $PDO->bindParam(':start', $start, PDO::PARAM_STR);
@@ -464,11 +459,19 @@ library index
         
         //$PDO->setFetchMode(PDO::FETCH_OBJ);
 
-        $array = $PDO->fetchAll();
+        $surveys = $PDO->fetchAll();
 
     } catch(PDOException $e) {
         echo 'ERROR: '.$e->getMessage();    
     }
+
+    $wtr = calc_wtr($surveys);
+    $nrs = calc_nrs($surveys);
+    $fcr = calc_fcr($surveys);
+
+    $array[] = $wtr[1];
+    $array[] = $nrs[1];
+    $array[] = $fcr[1];
     
     return $array;
 }
@@ -481,12 +484,7 @@ library index
     
     try {
         
-        $PDO = $conn->prepare('SELECT SUM(metric_1) AS m1sum, 
-        								COUNT(metric_1) AS m1count, 
-        								SUM(metric_2) AS m2sum, 
-        								COUNT(metric_2) AS m2count, 
-        								SUM(metric_3) AS m3sum, 
-        								COUNT(metric_3) AS m3count 
+        $PDO = $conn->prepare('SELECT metric_1, metric_2, metric_3
         						FROM survey_data WHERE level_3 = :level_3 AND completion_date BETWEEN :start AND :end');
         $PDO->bindParam(':level_3', $level_3, PDO::PARAM_STR);
         $PDO->bindParam(':start', $start, PDO::PARAM_STR);
@@ -495,14 +493,19 @@ library index
         
         //$PDO->setFetchMode(PDO::FETCH_OBJ);
 
-        $array = $PDO->fetchAll();
-
-        print_r($array);
-        die();
+        $surveys = $PDO->fetchAll();
 
     } catch(PDOException $e) {
         echo 'ERROR: '.$e->getMessage();    
     }
+
+    $wtr = calc_wtr($surveys);
+    $nrs = calc_nrs($surveys);
+    $fcr = calc_fcr($surveys);
+
+    $array[] = $wtr[1];
+    $array[] = $nrs[1];
+    $array[] = $fcr[1];
     
     return $array;
 }
@@ -978,9 +981,11 @@ library index
 		if($driver == 'level_1') { $oi = get_level_1_totals($conn,$pstart,$pend,$dname); }
 		if($driver == 'level_3') { $oi = get_level_3_totals($conn,$pstart,$pend,$dname); }
 
-		$all_wtr = $oi[0]['m1sum'] / $oi[0]['m1count'];
-		$all_nrs = $oi[0]['m2sum'] / $oi[0]['m2count'];
-		$all_fcr = $oi[0]['m3sum'] / $oi[0]['m3count'];
+
+
+		//$all_wtr = $oi[0]['m1sum'] / $oi[0]['m1count'];
+		//$all_nrs = $oi[0]['m2sum'] / $oi[0]['m2count'];
+		//$all_fcr = $oi[0]['m3sum'] / $oi[0]['m3count'];
 
 		if($driver == 'team') {
 
@@ -1055,9 +1060,9 @@ library index
 		$psurveys = count($psurveys);
 		$pvol = $psurveys / $scount;
 
-		$wtr_oi = ($all_wtr-$pwtr[1])*$pvol;
-		$nrs_oi = ($all_nrs-$pnrs[1])*$pvol;
-		$fcr_oi = ($all_fcr-$pfcr[1])*$pvol;
+		$wtr_oi = ($oi[0]-$pwtr[1])*$pvol*100;
+		$nrs_oi = ($oi[1]-$pnrs[1])*$pvol*100;
+		$fcr_oi = ($oi[2]-$pfcr[1])*$pvol*100;
 
 	    $cwtr = calc_wtr($csurveys);
 		$cnrs = calc_nrs($csurveys);

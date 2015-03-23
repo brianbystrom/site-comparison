@@ -92,6 +92,9 @@ table.table-bordered thead td {
 .font-bold {
 	font-weight: bold;
 }
-.oi-bg {
-	background-color: #ff00ff;
+.oi-bg-pos {
+	background-color: #dff0d8;
+}
+.oi-bg-neg {
+	background-color: #f2dede;
 }

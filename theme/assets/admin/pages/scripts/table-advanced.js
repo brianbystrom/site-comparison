@@ -41,7 +41,7 @@ var TableAdvanced = function () {
                    
                 });
 
-               alert(sOut);
+               //alert(sOut);
 
                sOut.forEach(function(value) {
                          tArray.push(value);
@@ -165,6 +165,8 @@ var TableAdvanced = function () {
                          tArray.push(value);
               });
 
+               
+
             return tArray;
         }
 
@@ -238,6 +240,19 @@ var TableAdvanced = function () {
                 $(this).addClass("row-details-open").removeClass("row-details-close");
                 oTable.fnOpen(nTr, fnFormatDetails(oTable, nTr), '');
             }
+
+            $("#sample_1 tbody tr td:nth-child(5)").each(function(){
+                    var percent = $(this).html();
+                    percent = Number(percent)/2;
+                    var style = '';
+                    if(percent<0) {
+                        style = 'oi-bg-neg';
+                    } else {
+                        style = 'oi-bg-pos';
+                    }
+                    var textval = "<div class='"+style+"' style='width: "+Math.abs(percent)+"%'>"+$(this).html()+"</div>";        
+                    $(this).html(textval);
+                });
         });
     }
 
